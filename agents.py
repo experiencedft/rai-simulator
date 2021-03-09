@@ -4,8 +4,6 @@ from random import uniform
 
 TOTAL_FLX_SUPPLY = 1000000
 
-seed(0)
-
 class BuyAndSellApe():
     '''
     A class to represent one type of agents, the Apes who are buying RAI directly on the market to supply liquidity instead of minting new RAI supply if the APY is above their threshold, and remove liquidity and sell if the APY is below their threshold. At this stage it is assumed that interactions with a Uniswap pool don't incur any fee.

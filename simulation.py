@@ -5,10 +5,13 @@ import agents
 import uniswap
 
 import random 
+import time
 from datetime import datetime
 import os
 
 import matplotlib.pyplot as plt 
+
+random.seed(int(time.time()))
 
 #Import config
 config_object = ConfigParser()
