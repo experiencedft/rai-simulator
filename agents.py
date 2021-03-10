@@ -59,6 +59,8 @@ class BuyAndSellApe():
 
         self.wallet = {"rai": 0, "eth": 0, "lp tokens": 0}
 
+        self.current_apy = 0
+
         if eth_holdings_distribution[0] == "uniform": 
             lower_bound = eth_holdings_distribution[1][0]
             upper_bound = eth_holdings_distribution[1][1]
@@ -95,7 +97,11 @@ class BuyAndSellApe():
 
         State change: 
 
-        None
+        current_apy: float
+            the expected apy calculated by the agent when the method is called
+
+        current_pool_share: float
+            the pool share calculated by the agent when the method is called (current pool share or potential pool share)
         
         Returns: 
 
@@ -138,6 +144,8 @@ class BuyAndSellApe():
             else: 
                 system_apy = -100*abs(1 - extrapolated_future_redemption_price/market_price_in_usd)
             apy = (extrapolated_reward_per_year_in_usd/value_of_pool_share_in_usd - 1)*100 + system_apy
+            self.current_apy = apy
+            self.current_pool_share = pool_share
             
         else: 
 
@@ -166,6 +174,8 @@ class BuyAndSellApe():
             else: 
                 system_apy = -100*abs(1 - extrapolated_future_redemption_price/market_price_in_usd)
             apy = (extrapolated_reward_per_year_in_usd/value_of_pool_share_in_usd - 1)*100 + system_apy
+            self.current_apy = apy
+            self.current_pool_share = pool_share
 
         if (apy >= self.apy_threshold):
             return True
