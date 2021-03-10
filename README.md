@@ -20,7 +20,7 @@ pip install matplotlib
 
 Clone the repo.
 
-Open the ``config.cfg`` file and enter your desired simulation parameters following instructions there. Save your parameters.
+Open the ``config.ini`` file and enter your desired simulation parameters following instructions there. Save your parameters.
 
 Run the simulation:
 
