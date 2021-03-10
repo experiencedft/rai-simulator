@@ -42,6 +42,8 @@ title=\lstname % show the filename of files included with \lstinputlisting; also
 
 %Package for math fonts
 \usepackage{amsfonts}
+%For unnumbered equations
+\usepackage{amsmath}
 
 %To skip a line between paragraphs and avoid indentation
 \usepackage{parskip}
@@ -99,7 +101,17 @@ title=\lstname % show the filename of files included with \lstinputlisting; also
       \item The simulation moves to the next timestep
     \end{enumerate}
 
-    The calculation of agents expected returns is made of two components. First, given an expected fully diluted FLX valuation, total amount of FLX given per day to liquidity providers, and the agent's pool share or potential pool share, an expected amount of rewards per day in USD is calculated and extrapolated to a year if all things stayed equal. Second, it is assumed that the agents believe that the system works, and that the market price of RAI will \textit{eventually} reach the redemption price, so they can interpret the difference between the future redemption price as negative return which adds to the positive return of the rewards. The future redemption price is extrapolated from the current redemption price to which is applied the current redemption rate (compounding). 
+    The calculation of agents expected returns is made of two components. First, given an expected fully diluted FLX valuation, total amount of FLX given per day to liquidity providers, and the agent's pool share or potential pool share, an expected amount of rewards per day in USD is calculated and extrapolated to a year if all things stayed equal. Denoting the expected FLX valuation $V_{FLX}$, the FLX distributed per day to liquidity providers $D_{FLX}$, the agent's pool share $s_{\mathrm{pool}}$, and the current value of the agent's pool share $V_{\mathrm{share}}$ this part of the returns is: 
+    
+    \begin{equation*}
+      \mathrm{FLX \ rewards \ expected \ returns \ (in \ \%)} =  100 \times \left( \frac{V_{FLX} \times D_{FLX} \times s_{\mathrm{pool}} \times N_{\mathrm{days}}}{V_{\mathrm{share}}} - 1 \right)
+    \end{equation*}
+    
+    Second, it is assumed that the agents believe that the system works, and that the market price of RAI will \textit{eventually} reach the redemption price, so they can interpret the difference between the future redemption price as negative return which adds to the positive return of the rewards. The future redemption price is extrapolated from the current redemption price to which is applied the current redemption rate (compounding). Denoting the current market price $p_{m}$, the future redemption price $p^{f}_{r}$ and the current redemption rate (allowed to be negative) $r$, this part of the returns is:
+
+    \begin{equation*}
+      \mathrm{Redemption \ rate \ driven \ returns \ (in \ \%)} = 100 \times \left| 1 - \frac{p^{f}_{r}}{p_{m}} \right| 
+    \end{equation*}
 
     The size of the RAI order needed to provide liquidity with one's entire ETH wallet content: size $ = R_{ETH}\left( \sqrt{1 + \frac{w_{ETH}}{R_{ETH}}} - 1 \right)$ where $w_{ETH}$ is the agent's ETH wallet content and $R_{ETH}$ is the current reserve of the liquidity pool in ETH (see Appendix for proof).
 
