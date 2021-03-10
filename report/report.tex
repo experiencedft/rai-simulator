@@ -87,6 +87,9 @@ title=\lstname % show the filename of files included with \lstinputlisting; also
 \usepackage{graphicx}
 \usepackage{subcaption}
 
+%Force figures positioning
+\usepackage{float}
+
 %New environement to have first line of an enumerate list bold
 % \newcommand{\step}[1]{\item{\bfseries #1}}
 % \newcommand{\explanation}[1]{\par #1}
@@ -133,7 +136,9 @@ title=\lstname % show the filename of files included with \lstinputlisting; also
       \item The redemption rate is updated based on the error between the current value of the redemption price and the 16H time weighted average price of the pool
       \item The simulation moves to the next timestep
     \end{enumerate}
-
+    
+    Every interaction is assumed to incur 0 fees for the user (no trading fee, no gas fees).
+    
     The calculation of agents expected returns is made of two components. First, given an expected fully diluted FLX valuation, total amount of FLX given per day to liquidity providers, and the agent's pool share or potential pool share, an expected amount of rewards per day in USD is calculated and extrapolated to a year if all things stayed equal. Denoting the expected FLX valuation $V_{FLX}$, the FLX distributed per day to liquidity providers $D_{FLX}$, the agent's pool share $s_{\mathrm{pool}}$, and the current value of the agent's pool share $V_{\mathrm{share}}$ this part of the returns is: 
     
     \begin{equation*}
@@ -216,6 +221,8 @@ title=\lstname % show the filename of files included with \lstinputlisting; also
       \caption{Evolution of the hourly redemption rate over a year. The rate increases when the difference between the redemption price and market TWAP decreases and conversely.}
     \end{figure}
 
+    \subsection{Observations}
+
     From Figure 1, one can develop an intuition of the interaction between the agents and the system and its controller. 
     
     First, the redemption price is equal to the price at which the Uniswap pool is seeded. As a consequence, the error is zero and the only type of return agents have are the positive returns of the liquidity mining rewards. They immediately jump into the pool, moving the price up. 
@@ -224,11 +231,11 @@ title=\lstname % show the filename of files included with \lstinputlisting; also
 
     One surprising feature at first glance is that some agents seem to go in and out of the pool chaotically, instead of dropping sequentially as the returns go below their respective thresholds due to constant decrease of the redemption rate. This can be understood as coupling between the agents. Indeed, the calculation of their returns from liquidity mining depends on their pool share, which in turn depends on the amount of other agents that are in the pool. If a particular agent leaves the pool, this might increase the proportional share of another agent who had previously left it, making their expected return go above threshold again. This musical chair game continues until the redemption rate becomes so low that some agents leave the pool definitely. 
     
-    Around day 330 with the parameters of this run, the redemption rate is so low that every agent has left the pool. Since we have seeded the pool with a baseline amount that cannot be withdrawn and that are no other agents capable of driving the market price down in this setup, the price stays exactly the same as the initial price of the pool (constant function market makers are path independent), so the error grows indefinitely. 
+    Around day 330 with the parameters of this run, the redemption rate is so low that every agent has left the pool. Since we have seeded the pool with a baseline amount that cannot be withdrawn and that are no other agents capable of driving the market price down in this setup, the price stays exactly the same as the initial price of the pool (constant function market makers are path independent with zero fees), so the error grows indefinitely. 
 
     In order to confirm the idea of agents expected returns not going down smoothly, the evolution of one particular agents' expected return over the first 50 days is plotted below, as well as the evolution of their pool share.
 
-    \begin{figure}
+    \begin{figure}[H]
       \captionsetup[subfigure]{position=b}
       \centering
       \begin{subfigure}[t]{.5\textwidth}
@@ -245,5 +252,7 @@ title=\lstname % show the filename of files included with \lstinputlisting; also
       \end{subfigure}
       \caption{The expected return and pool share of a particular agent are shown to evolve chaotically, as other agents leave and join the pool, their current or potential pool share increases or decreases respectively, influencing their expected return calculations. This coupling explains why the agent's expected returns don't go down setadily with the decreasing redemption rate, and is ultimately the source of the chaotic features of the TWAP evolution.}
     \end{figure}
+
+    While this model is extremely simplistic, some of these observations are likely to remain relevant as more types of agents are added. For example, whether the agents are minting, shorting, buying, etc, there will always exist all kinds of couplings between these different agent types that will make the price action chaotic, which is a general feature of financial markets time series. One could also note that a simple proportional controller is likely to be unstable in many situations. In the simulation setup presented here, it seems that the addition of an integral term would be particularly useful to prevent the divergence.
 
 \end{document}
