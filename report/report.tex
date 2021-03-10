@@ -2,7 +2,7 @@
 
 %Define the listing package
 \usepackage{listings} %code highlighter
-\usepackage{color} %use color
+\usepackage[usenames, dvipsnames]{xcolor}
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
@@ -35,6 +35,20 @@ stringstyle=\color{mymauve}, % string literal style
 tabsize=2, % sets default tabsize to 2 spaces
 title=\lstname % show the filename of files included with \lstinputlisting; also try caption instead of title
 }
+
+%Define language for configuration files
+\lstdefinelanguage{ini}
+{
+    basicstyle=\ttfamily\small,
+    columns=fullflexible,
+    morecomment=[s][\color{Orchid}\bfseries]{[}{]},
+    morecomment=[l]{\#},
+    morecomment=[l]{;},
+    commentstyle=\color{gray}\ttfamily,
+    morekeywords={},
+    otherkeywords={=,:},
+    keywordstyle={\color{green}\bfseries}
+}
 %END of listing package%
  
 \definecolor{darkgray}{rgb}{.4,.4,.4}
@@ -53,6 +67,25 @@ title=\lstname % show the filename of files included with \lstinputlisting; also
 
 %To set margins
 \usepackage{geometry}
+
+%For nice vectorized figures
+% \usepackage{tikz}
+% \usepackage[utf8]{inputenc}
+% \usepackage{pgfplots}
+%\DeclareUnicodeCharacter{2212}{−}
+% \usepgfplotslibrary{groupplots,dateplot}
+% \usetikzlibrary{patterns,shapes.arrows}
+% \pgfplotsset{compat=newest}
+%Externalization of compilation of pgfplots
+% \usepgfplotslibrary{external}
+% \tikzexternalize{main}
+
+%Lower margins for captions
+\usepackage[margin=1cm]{caption}
+
+%For side to side pictures in figures
+\usepackage{graphicx}
+\usepackage{subcaption}
 
 %New environement to have first line of an enumerate list bold
 % \newcommand{\step}[1]{\item{\bfseries #1}}
@@ -116,5 +149,101 @@ title=\lstname % show the filename of files included with \lstinputlisting; also
     The size of the RAI order needed to provide liquidity with one's entire ETH wallet content: size $ = R_{ETH}\left( \sqrt{1 + \frac{w_{ETH}}{R_{ETH}}} - 1 \right)$ where $w_{ETH}$ is the agent's ETH wallet content and $R_{ETH}$ is the current reserve of the liquidity pool in ETH (see Appendix for proof).
 
     \subsection{Results}
+
+    The results of the simulation are non-deterministic because of the random ordering of agents interacactions at every step of the simulation. For reproducibility, the result of a run with the Python random functions seeded with 0 is shown below. The \texttt{config.ini} file used for this run is: 
+
+    \newpage
+
+    \begin{lstlisting}[language=ini]
+      #################################################################
+      #                    SIMULATION PARAMETERS                      #
+      #################################################################
+
+      [Global parameters]
+      #Number of agents to run the simulation with
+      N_AGENTS = 10
+      #Number of days to simulate
+      N_DAYS = 365
+      #ETHUSD Price, the simulation currently only takes a constant price
+      ETH_USD_PRICE = 1500
+      #FLX tokens given per day in total to liquidity providers
+      FLX_PER_DAY_LIQUIDITY_PROVIDERS = 334
+
+      [Initial Uniswap pool]
+      #Initial content of the RAI/ETH liquidity pool
+      #Example parameters ~60M USD total value locked in liquidity pool
+      INITIAL_POOL_RAI = 10000000
+      INITIAL_POOL_ETH = 20940
+
+      [Agents parameters]
+      #Distribution of ETH holdings of agents
+      ETH_HOLDINGS_DISTRIBUTION = uniform
+      LOWER_BOUND_ETH_HOLDINGS = 1000
+      UPPER_BOUND_ETH_HOLDINGS = 3000
+
+      #Distribution of expected total FLX valuation by agents in USD
+      EXCEPTED_FLX_VALUATION_DISTRIBUTION = uniform
+      LOWER_BOUND_FLX_VALUATION = 1000000000
+      UPPER_BOUND_FLX_VALUATION = 2000000000
+
+      #Distribution of APY threshold of buy and sell apes with APY expressed in %
+      APY_THRESHOLD_BUYANDSELL_APES_DISTRIBUTION = uniform
+      APY_THRESHOLD_BUYANDSELL_APES_LOWER_BOUND = 100
+      APY_THRESHOLD_BUYANDSELL_APES_UPPER_BOUND = 200
+
+      [RAI system parameters]
+      #Type of controller for the RAI system - currently working HOURLY, choose parameter accordingly
+
+      #Proportional
+      CONTROLLER = P 
+      KP = 0.00023
+
+      #Initial redemption price
+      INITIAL_REDEMPTION_PRICE = 3.14
+    \end{lstlisting}
+
+    \begin{figure}
+      \begin{center}
+        \includegraphics[scale=0.7]{figures/price-evol 2021-03-10 14-34-53.png}
+      \end{center}
+      \caption{Evolution of the TWAP and redemption price over a year.}
+    \end{figure}
+
+    \begin{figure}
+      \begin{center}
+        \includegraphics[scale=0.7]{figures/redemption-rate-evol 2021-03-10 14-34-53.png}
+      \end{center}
+      \caption{Evolution of the hourly redemption rate over a year. The rate increases when the difference between the redemption price and market TWAP decreases and conversely.}
+    \end{figure}
+
+    From Figure 1, one can develop an intuition of the interaction between the agents and the system and its controller. 
+    
+    First, the redemption price is equal to the price at which the Uniswap pool is seeded. As a consequence, the error is zero and the only type of return agents have are the positive returns of the liquidity mining rewards. They immediately jump into the pool, moving the price up. 
+    
+    After 16 hours, the TWAP starts to pick up that change in price, which translates in the RAI controller reading a sudden jump in error and activating the proportional correction. The redemption rate starts to go down, and being negative this translates into a negative expected return that adds to the positive return of the agents. For some agents, this makes their total expected return go below their threshold and makes them drop out of the pool. 
+
+    One surprising feature at first glance is that some agents seem to go in and out of the pool chaotically, instead of dropping sequentially as the returns go below their respective thresholds due to constant decrease of the redemption rate. This can be understood as coupling between the agents. Indeed, the calculation of their returns from liquidity mining depends on their pool share, which in turn depends on the amount of other agents that are in the pool. If a particular agent leaves the pool, this might increase the proportional share of another agent who had previously left it, making their expected return go above threshold again. This musical chair game continues until the redemption rate becomes so low that some agents leave the pool definitely. 
+    
+    Around day 330 with the parameters of this run, the redemption rate is so low that every agent has left the pool. Since we have seeded the pool with a baseline amount that cannot be withdrawn and that are no other agents capable of driving the market price down in this setup, the price stays exactly the same as the initial price of the pool (constant function market makers are path independent), so the error grows indefinitely. 
+
+    In order to confirm the idea of agents expected returns not going down smoothly, the evolution of one particular agents' expected return over the first 50 days is plotted below, as well as the evolution of their pool share.
+
+    \begin{figure}
+      \captionsetup[subfigure]{position=b}
+      \centering
+      \begin{subfigure}[t]{.5\textwidth}
+        \centering
+        \captionsetup{margin=1.1cm}
+        \includegraphics[width=1\linewidth]{figures/agent-return 2021-03-10 15-25-52.png}
+        \caption{Evolution of an agent's computed expected return for the first 50 days of the simulation}
+      \end{subfigure}%
+      \begin{subfigure}[t]{.5\textwidth}
+        \centering
+        \captionsetup{margin=1.1cm}
+        \includegraphics[width=1\linewidth]{figures/agent-pool-share 2021-03-10 15-25-52.png}
+        \caption{Evolution of an agent's computed pool share (current, or potential) for the first 50 days of the simulation}
+      \end{subfigure}
+      \caption{The expected return and pool share of a particular agent are shown to evolve chaotically, as other agents leave and join the pool, their current or potential pool share increases or decreases respectively, influencing their expected return calculations. This coupling explains why the agent's expected returns don't go down setadily with the decreasing redemption rate, and is ultimately the source of the chaotic features of the TWAP evolution.}
+    \end{figure}
 
 \end{document}
