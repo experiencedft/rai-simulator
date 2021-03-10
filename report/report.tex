@@ -1,0 +1,108 @@
+\documentclass{article}
+
+%Define the listing package
+\usepackage{listings} %code highlighter
+\usepackage{color} %use color
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+ 
+%Customize a bit the look
+\lstset{ %
+backgroundcolor=\color{white}, % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+basicstyle=\footnotesize, % the size of the fonts that are used for the code
+breakatwhitespace=false, % sets if automatic breaks should only happen at whitespace
+breaklines=true, % sets automatic line breaking
+captionpos=b, % sets the caption-position to bottom
+commentstyle=\color{mygreen}, % comment style
+deletekeywords={...}, % if you want to delete keywords from the given language
+escapeinside={\%*}{*)}, % if you want to add LaTeX within your code
+extendedchars=true, % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+frame=single, % adds a frame around the code
+keepspaces=true, % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+keywordstyle=\color{blue}, % keyword style
+% language=Octave, % the language of the code
+morekeywords={*,...}, % if you want to add more keywords to the set
+numbers=left, % where to put the line-numbers; possible values are (none, left, right)
+numbersep=5pt, % how far the line-numbers are from the code
+numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+rulecolor=\color{black}, % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+showspaces=false, % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+showstringspaces=false, % underline spaces within strings only
+showtabs=false, % show tabs within strings adding particular underscores
+stepnumber=1, % the step between two line-numbers. If it's 1, each line will be numbered
+stringstyle=\color{mymauve}, % string literal style
+tabsize=2, % sets default tabsize to 2 spaces
+title=\lstname % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+%END of listing package%
+ 
+\definecolor{darkgray}{rgb}{.4,.4,.4}
+\definecolor{purple}{rgb}{0.65, 0.12, 0.82}
+
+%Package for math fonts
+\usepackage{amsfonts}
+
+%To skip a line between paragraphs and avoid indentation
+\usepackage{parskip}
+
+%Package to change horizontal margins for a specific part using \begin{adjustwidth}{right change amount}{left change amount}
+\usepackage{changepage}
+
+%To set margins
+\usepackage{geometry}
+
+%New environement to have first line of an enumerate list bold
+% \newcommand{\step}[1]{\item{\bfseries #1}}
+% \newcommand{\explanation}[1]{\par #1}
+% \newenvironment{steps}
+%   {\begin{enumerate}}
+%   {\end{enumerate}}
+
+  %Sans-serif font, see https://tex.stackexchange.com/questions/2095/what-is-the-simplest-way-to-typeset-an-entire-document-in-sans-serif
+%\renewcommand{\familydefault}{\sfdefault}
+
+\title{Agent based modeling of the RAI system}
+\author{experience}
+
+\begin{document}
+    \maketitle
+
+    \section{Introduction}
+    In this report, RAI's market behavior under different conditions is explored using an agent based model. Agents have their own strategies and decide whether they want to interact with either the RAI system or a Uniswap RAI/ETH pool in discrete steps. 
+    
+    \section{Preliminary: simplified model}
+
+    \subsection{Description}
+
+    The model is initially largely simplified to reflect the current real world parameters of the deployed RAI system and get some intuition on the kind of interactions that can exist between the different agents and the system, and indirectly, between the agents themselves. In particular, the impact of an incentive for RAI/ETH liquidity providers in the form of future FLX tokens is investigated under these conditions: 
+
+    \begin{itemize}
+      \item The liquidity pool is seeded with some baseline amount of liquidity that cannot be withdrawn
+      \item The agents' initial holdings Ether,  annualized return threshold to enter the system, and expected FLX valuation are drawn from a uniform distribution
+      \item The only strategy for agents is to buy RAI and provide liquidity in RAI/ETH with their entire net worth if the annualized return they would get is above their threshold, and remove liquidity and sell RAI for ETH otherwise
+      \item The RAI system controller is a simple proportional controller with parameter $K_p$
+    \end{itemize}
+
+    The simulation code used for the present report advances in 1-hour time steps. Every step, the following actions occur: 
+
+    \begin{enumerate}
+      \item Agents are randomized
+      \item Each agent sequentially checks if they annualized return they would get (or are getting) for providing liquidity is above their threshold:
+        \begin{itemize}
+          \item If yes and the agent already provides liquidity, or if no and the agent doesn't provide liquidity nothing changes
+          \item If yes and the agent doesn't provide liquidty, they buy RAI with the exact amount needed so that they can add liquidity with their entire current net worth. 
+          \item If no, and the agent is currently providing liquidity, they redeem all of their liquidity provider tokens and directly sell the obtained RAI for ETH in the pool
+        \end{itemize}
+      \item The price at the end of all agents interactions is saved for the time weighted average price calculation
+      \item The redemption rate is updated based on the error between the current value of the redemption price and the 16H time weighted average price of the pool
+      \item The simulation moves to the next timestep
+    \end{enumerate}
+
+    The calculation of agents expected returns is made of two components. First, given an expected fully diluted FLX valuation, total amount of FLX given per day to liquidity providers, and the agent's pool share or potential pool share, an expected amount of rewards per day in USD is calculated and extrapolated to a year if all things stayed equal. Second, it is assumed that the agents believe that the system works, and that the market price of RAI will \textit{eventually} reach the redemption price, so they can interpret the difference between the future redemption price as negative return which adds to the positive return of the rewards. The future redemption price is extrapolated from the current redemption price to which is applied the current redemption rate (compounding). 
+
+    The size of the RAI order needed to provide liquidity with one's entire ETH wallet content: size $ = R_{ETH}\left( \sqrt{1 + \frac{w_{ETH}}{R_{ETH}}} - 1 \right)$ where $w_{ETH}$ is the agent's ETH wallet content and $R_{ETH}$ is the current reserve of the liquidity pool in ETH (see Appendix for proof).
+
+    \subsection{Results}
+
+\end{document}
