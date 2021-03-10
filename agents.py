@@ -125,16 +125,19 @@ class BuyAndSellApe():
             #Calculate APY in %
             value_of_pool_share_in_usd = total_value_locked_in_eth*eth_usd_price*pool_share
             #The APY is the value reward gotten plus the system's APY (annualized redemption rate) which can be negative
-            #Get current system redemption price
+            #Get current system redemption price and pool spot price
             redemption_price = System.redemption_price
             redemption_rate_hourly = System.redemption_rate_hourly
+            market_price_in_eth = Pool.getSpotPrice()
+            market_price_in_usd = market_price_in_eth*eth_usd_price
             #Convert hourly redemption rate from RAI.h-1 to (proportion).h-1, i.e. 0.10 = 10%
             redemption_rate_hourly_proportion = (redemption_rate_hourly/redemption_price)
-            if redemption_rate_hourly_proportion >= 0:
-                system_apy =  100*((1+redemption_rate_hourly_proportion)**8760 - 1)
+            extrapolated_future_redemption_price = redemption_price*(1+redemption_rate_hourly_proportion)**8760
+            if redemption_rate_hourly_proportion > 0:
+                system_apy = 100*abs(1 - extrapolated_future_redemption_price/market_price_in_usd)
             else: 
-                system_apy = -100*(1 - (1-abs(redemption_rate_hourly_proportion))**8760)
-            apy = (extrapolated_reward_per_year_in_usd/value_of_pool_share_in_usd)*100 + system_apy
+                system_apy = -100*abs(1 - extrapolated_future_redemption_price/market_price_in_usd)
+            apy = (extrapolated_reward_per_year_in_usd/value_of_pool_share_in_usd - 1)*100 + system_apy
             
         else: 
 
@@ -150,16 +153,19 @@ class BuyAndSellApe():
             #Calculate APY in %
             value_of_pool_share_in_usd = total_value_locked_in_eth*eth_usd_price*pool_share
             #The APY is the value reward gotten plus the system's APY (annualized redemption rate) which can be negative
-            #Get current system redemption price
+            #Get current system redemption price and pool spot price
             redemption_price = System.redemption_price
+            market_price_in_eth = Pool.getSpotPrice()
+            market_price_in_usd = market_price_in_eth*eth_usd_price
             redemption_rate_hourly = System.redemption_rate_hourly
             #Convert hourly redemption rate from RAI.h-1 to (proportion).h-1, i.e. 0.10 = 10%
             redemption_rate_hourly_proportion = (redemption_rate_hourly/redemption_price)
+            extrapolated_future_redemption_price = redemption_price*(1+redemption_rate_hourly_proportion)**8760
             if redemption_rate_hourly_proportion > 0:
-                system_apy =  100*((1+redemption_rate_hourly_proportion)**8760 - 1)
+                system_apy = 100*abs(1 - extrapolated_future_redemption_price/market_price_in_usd)
             else: 
-                system_apy = -100*(1 - (1-abs(redemption_rate_hourly_proportion))**8760)
-            apy = (extrapolated_reward_per_year_in_usd/value_of_pool_share_in_usd)*100 + system_apy
+                system_apy = -100*abs(1 - extrapolated_future_redemption_price/market_price_in_usd)
+            apy = (extrapolated_reward_per_year_in_usd/value_of_pool_share_in_usd - 1)*100 + system_apy
 
         if (apy >= self.apy_threshold):
             return True
