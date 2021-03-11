@@ -18,7 +18,7 @@ class RAISystem():
         total RAI debt issued by the system
     total_collateral: float
         total ETH collateral in custody of the system
-    safes: list[dictionary]
+    safes: dictionary{dictionary}
         list of all the open safes as dictionaries, with "collateral", "debt" and "id"
     safe_id_counter: int
         a counter keeping track of the number of safes opened to attribute them a unique ID
@@ -121,3 +121,79 @@ class RAISystem():
         if self.redemption_price < 0:
             sys.exit("Error: The redemption price is below 0")
 
+    def openSafe(self, collateral, collateralization, eth_usd_price):
+        '''
+        Open a safe with the specified amount of collateral and generate new RAI debt.
+
+        Parameters: 
+
+        collateral: float
+            the amount of collateral to use to open the Safe
+        collateralization: float
+            the desired collateralization ratio in %
+        eth_usd_price: float
+            the price of ETH in USD at the time of the safe creation
+
+        State change: 
+        
+        self.safes: 
+            add the safe to the system state
+        self.safe_id_counter: 
+            increase the safe_id_counter value
+        self.total_collateral:
+            add collateral to total collateral
+        self_total_debt:
+            add generated debt to total debt
+        
+        Returns: 
+        
+        safe_id: int
+            the unique ID of the opened safe
+        rai_to_mint: float
+            the amount of RAI minted from the safe creation
+        '''
+
+        assert collateralization > MIN_COLLATERALIZATION
+
+        safe_id = self.safe_id_counter
+        safe_id = str(safe_id)
+        rai_to_mint = (collateral*eth_usd_price/(collateralization/100))/self.redemption_price
+        self.safes[safe_id] = {"collateral": collateral, "debt": rai_to_mint}
+        self.safe_id_counter += 1
+        self.total_collateral += collateral
+        self.total_debt += rai_to_mint
+
+        return safe_id, rai_to_mint
+
+    def closeSafe(self, safe_id):
+        '''
+        Close a safe by deleting the safes dictionary entry corresponding to the given ID and giving to the user the collateral remaining after the closing.
+
+        Parameters: 
+
+        safe_id: int
+            the unique ID of the safe to close
+
+        State change:
+
+        self.safes: 
+            remove the requested safe
+        self.total_collateral:
+            subtract the collateral of the safe at the time of closing 
+        self.total_debt: 
+            subtract the debt of the safe at the time of closing
+
+        Returns: 
+
+        outstanding_collateral: float
+            the amount of collateral remaining after closing the safe
+        '''
+
+        safe_id = str(safe_id)
+        collateral = self.safes[safe_id]["collateral"]
+        debt = self.safes[safe_id]["debt"]
+        self.total_collateral -= collateral
+        self.total_debt -= debt
+        del self.safes[safe_id]
+
+        return collateral
