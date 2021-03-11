@@ -1,4 +1,4 @@
-from mpmath import sqrt
+import math
 from random import seed
 from random import uniform
 
@@ -116,7 +116,7 @@ class BuyAndSellApe():
             total_value_locked_in_eth = Pool.getTotalValueLockedInETH()
             eth_reserve = Pool.reserves[1]
             #Calculate what is the maximum amount of ETH the ape should use to be able to provide liquidity with their entire wallet content, see documentation for a proof of this formula which surprisingly doesn't depend on the current RAI reserves. ONLY WORKS IF ETH RESERVES IN THE POOL ARE < 2.
-            amount_eth_to_buy_with = eth_reserve*(sqrt(1 + self.wallet["eth"]/eth_reserve) - 1)
+            amount_eth_to_buy_with = eth_reserve*(math.sqrt(1 + self.wallet["eth"]/eth_reserve) - 1)
             #Calculate amount of liquidity tokens that would be obtained
             liquidity_tokens_obtained = Pool.virtualAddLiquidityAfterBuyingRAI(amount_eth_to_buy_with)
             #New liquidity tokens supply that would result from this interaction
@@ -209,7 +209,7 @@ class BuyAndSellApe():
 
         #See isAPYGood method for explanation 
         eth_reserve = Pool.reserves[1]
-        amount_eth_to_buy_with = eth_reserve*(sqrt(1 + self.wallet["eth"]/eth_reserve) - 1)
+        amount_eth_to_buy_with = eth_reserve*(math.sqrt(1 + self.wallet["eth"]/eth_reserve) - 1)
         amount_rai_obtained = Pool.buyRAI(amount_eth_to_buy_with)
         #Update wallet ETH holdings
         self.wallet["eth"] -= amount_eth_to_buy_with
