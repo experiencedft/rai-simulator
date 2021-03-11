@@ -197,3 +197,43 @@ class RAISystem():
         del self.safes[safe_id]
 
         return collateral
+
+    def modifySafe(self, safe_id, net_amount_collateral_to_add, net_amount_debt_to_add, eth_usd_price):
+        '''
+        Modify a safe by either adding or removing collateral or debt. Negative inputs correspond to a removal of that amount.
+
+        Parameters:
+
+        safe_in: int
+            the unique ID of the safe to modify
+
+        net_amount_collateral_to_add: float
+
+        net_amount_debt_to_add: float
+
+        eth_usd_price: float
+
+        State change: 
+
+        self.safes: 
+            modify the requested safe
+        
+        self.total_collateral: 
+            add net amount of collateral
+        
+        self.total_debt:
+            add net amount of debt
+
+        Returns: 
+
+        None
+        '''
+
+        safe_id = str(safe_id)
+        self.safes[safe_id]["collateral"] += net_amount_collateral_to_add
+        self.safes[safe_id]["debt"] += net_amount_debt_to_add
+
+        #Check that the debt is above the minimum collateralization threshold
+        new_collateralization =  self.safes[safe_id]["collateral"]*eth_usd_price/(self.safes[safe_id]["debt"]*self.redemption_price)
+
+        assert new_collateralization > MIN_COLLATERALIZATION
