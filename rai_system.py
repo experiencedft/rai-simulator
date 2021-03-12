@@ -19,7 +19,7 @@ class RAISystem():
     total_collateral: float
         total ETH collateral in custody of the system
     safes: dictionary{dictionary}
-        list of all the open safes as dictionaries, with "collateral", "debt" and "id"
+        list of all the open safes as dictionaries, with "collateral" and "debt"
     safe_id_counter: int
         a counter keeping track of the number of safes opened to attribute them a unique ID
     max_rai_per_eth: float
@@ -237,3 +237,14 @@ class RAISystem():
         new_collateralization =  self.safes[safe_id]["collateral"]*eth_usd_price/(self.safes[safe_id]["debt"]*self.redemption_price)
 
         assert new_collateralization > MIN_COLLATERALIZATION
+
+    def getSafe(self, safe_id):
+        '''
+        Given a safe ID, return a dictionary whose entries are the current collateral and debt of the corresponding safe.
+
+        Parameters: 
+
+        safe_id: int
+            the ID of the safe to return
+        '''
+        return self.safes[str(safe_id)]
