@@ -162,9 +162,6 @@ class UniswapPool():
 
         return liquidity_tokens_to_mint
 
-
-
-
     def removeLiquidity(self, liquidity_tokens):
         '''
         Remove tokens from the reserves corresponding to the amount of liquidity tokens given. 
@@ -361,3 +358,15 @@ class UniswapPool():
         if len(hourly_prices) < 16:
             return self.initial_spot_price
         return sum(hourly_prices)/16
+
+    def ETHInGivenRAIOut(self, amount_rai_out):
+        '''
+        Returns the amount of ETH needed to get a specific amount of RAI out.
+        '''
+        #Current ETH Balance
+        eth_reserve = self.reserves[1]
+        rai_reserve = self.reserves[0]
+        #See Balance whitepaper for formula
+        eth_needed = eth_reserve*((rai_reserve/(rai_reserve-amount_rai_out)) - 1)
+
+        return eth_needed
