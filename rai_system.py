@@ -26,6 +26,8 @@ class RAISystem():
         maximum amount of RAI that can currently be issued per unit of collateral
     controller: list[string, list[float]]
         the controller used for the current RAI system
+    errors: list[float]
+        the list of errors over the lifetime of the system (to integrate and differentiate)
 
     Methods
     ___________
@@ -74,6 +76,7 @@ class RAISystem():
         self.safes = {}
         self.safe_id_counter = 0
         self.max_rai_per_eth = (current_eth_usd_price/(MIN_COLLATERALIZATION/100))/initial_redemption_price
+        self.errors = []
 
     def updateRedemptionRateHourly(self, twap, eth_usd_price):
         '''
@@ -93,13 +96,15 @@ class RAISystem():
         None
         '''
 
-        #Action of a proportional controller
+        #Action of a proportional controller (P)
         if self.controller[0] == "P":
             Kp = self.controller[1][0]
             self.redemption_rate_hourly = Kp*(self.redemption_price - twap*eth_usd_price)
-        #Add action of other controllers later
-        else:
-            assert False
+        #Action of a proportional-integral controller (PI)
+        elif self.controller[0] == "PI":
+            Kp = self.controller[1][0]
+            Ki = self.controller[1][1]
+            self.redemption_rate_hourly = Kp*(self.redemption_price - twap*eth_usd_price) + Ki*sum(self.errors)
 
     def updateRedemptionPriceHourly(self):
         '''
@@ -248,3 +253,18 @@ class RAISystem():
             the ID of the safe to return
         '''
         return self.safes[str(safe_id)]
+
+    def updateErrorsList(self, Pool, eth_usd_price):
+        '''
+        Add the current error to the list of historical errors between the market price and redemption price. Intended to use for 1-hour sampling, 1-hour timestep simulations.
+
+        Parameters:
+
+        Pool: UniswapPool() class
+
+        State change: 
+
+        self.errors
+        '''
+        twap_in_usd = Pool.getTWAP()*eth_usd_price
+        self.errors.append(self.redemption_price - twap_in_usd)
