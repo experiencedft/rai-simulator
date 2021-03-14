@@ -8,12 +8,18 @@ Currently the project only implements one type of agents and is intended to be u
 
 ## Prerequisites
 
-Install Python 3.
+Install Python 3.7 or higher.
 
 Install Matplotlib:
 
 ```bash
 pip install matplotlib
+```
+
+Install Numpy:
+
+```bash
+pip install numpy
 ```
 
 ## Usage
