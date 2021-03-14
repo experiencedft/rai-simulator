@@ -84,10 +84,15 @@ collateralization_distribution = [distribution_collateralization, [parameter1_co
 
 #Choice of a controller and its parameters, in this case proportional with Kp = 0.01
 controller_type = config_object.get("RAI system parameters", "CONTROLLER")
-controller_parameter1 = float(config_object.get("RAI system parameters", "KP"))
-controller_parameters = []
-controller_parameters.append(controller_parameter1)
+if controller_type == "P": 
+    Kp = float(config_object.get("RAI system parameters", "KP"))
+    controller_parameters = [Kp]
+elif controller_type == "PI":
+    Kp = float(config_object.get("RAI system parameters", "KP"))
+    Ki = float(config_object.get("RAI system parameters", "KI"))
+    controller_parameters = [Kp, Ki]
 controller = [controller_type, controller_parameters]
+
 #Initial redemption price of RAI in USD
 initial_redemption_price = 3.14
 
@@ -136,6 +141,8 @@ for i in range(N_HOURS):
     redemption_price_hourly_plot.append(redemption_price)
     #Update the redemption price
     System.updateRedemptionPriceHourly()
+    #Update the errors list of the system
+    System.updateErrorsList(Pool, ETH_USD_PRICE)
     #Shuffle the agents: this makes the simulation non-deterministic 
     random.shuffle(Agents)
     for agent in Agents: 
