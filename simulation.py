@@ -10,6 +10,7 @@ from datetime import datetime
 import os
 
 import matplotlib.pyplot as plt 
+import numpy as np
 
 random.seed(int(time.time()))
 
@@ -17,8 +18,9 @@ random.seed(int(time.time()))
 config_object = ConfigParser()
 config_object.read("config.ini")
 
-#Number of agents to interact with the system
+#Number of agents to interact with the system and the proportions of each agents
 N_AGENTS = int(config_object.get("Global parameters", "N_AGENTS"))
+
 ETH_USD_PRICE = float(config_object.get("Global parameters", "ETH_USD_PRICE"))
 N_DAYS = int(config_object.get("Global parameters", "N_DAYS"))
 N_HOURS = N_DAYS*24
@@ -27,26 +29,56 @@ FLX_PER_DAY_LIQUIDITY_PROVIDERS = float(config_object.get("Global parameters", "
 initial_rai = float(config_object.get("Initial Uniswap pool", "INITIAL_POOL_RAI"))
 initial_eth = float(config_object.get("Initial Uniswap pool", "INITIAL_POOL_ETH"))
 
-#Choice of distributions to draw agents from
+#Agents parameters
+
+#Proportion of each type of agent to use in the simulation
+BUY_AND_SELL_APES_PROPORTION = int(config_object.get("General agents parameters", "BUY_AND_SELL_APES_PROPORTION"))/100
+SHORTERS_PROPORTION = int(config_object.get("General agents parameters", "SHORTERS_PROPORTION"))/100
+assert BUY_AND_SELL_APES_PROPORTION + SHORTERS_PROPORTION == 1
+
+#Buy and sell apes secific parameters
 
 #Agents have ETH holdings uniformly distributed between 1 and 50 ETH
-distribution_eth = config_object.get("Agents parameters", "ETH_HOLDINGS_DISTRIBUTION")
-parameter1_eth = float(config_object.get("Agents parameters", "LOWER_BOUND_ETH_HOLDINGS"))
-parameter2_eth = float(config_object.get("Agents parameters", "UPPER_BOUND_ETH_HOLDINGS"))
-eth_holdings_distribution = [distribution_eth, [parameter1_eth, parameter2_eth]]
+distribution_eth = config_object.get("Buy and sell apes parameters", "ETH_HOLDINGS_DISTRIBUTION")
+parameter1_eth = float(config_object.get("Buy and sell apes parameters", "LOWER_BOUND_ETH_HOLDINGS"))
+parameter2_eth = float(config_object.get("Buy and sell apes parameters", "UPPER_BOUND_ETH_HOLDINGS"))
+eth_holdings_distribution_apes = [distribution_eth, [parameter1_eth, parameter2_eth]]
 
 #Agents who care about APY have a threshold of satisfactory APY between 10 and 400%
 
-distribution_apy = config_object.get("Agents parameters", "APY_THRESHOLD_BUYANDSELL_APES_DISTRIBUTION")
-parameter1_apy = float(config_object.get("Agents parameters", "APY_THRESHOLD_BUYANDSELL_APES_LOWER_BOUND"))
-parameter2_apy = float(config_object.get("Agents parameters", "APY_THRESHOLD_BUYANDSELL_APES_UPPER_BOUND"))
+distribution_apy = config_object.get("Buy and sell apes parameters", "APY_THRESHOLD_BUYANDSELL_APES_DISTRIBUTION")
+parameter1_apy = float(config_object.get("Buy and sell apes parameters", "APY_THRESHOLD_BUYANDSELL_APES_LOWER_BOUND"))
+parameter2_apy = float(config_object.get("Buy and sell apes parameters", "APY_THRESHOLD_BUYANDSELL_APES_UPPER_BOUND"))
 apy_threshold_distribution = [distribution_apy, [parameter1_apy, parameter2_apy]]
 
 #Agents have expected FLX total valuation uniformly distributed
-distribution_flx = config_object.get("Agents parameters", "EXCEPTED_FLX_VALUATION_DISTRIBUTION")
-parameter1_flx = float(config_object.get("Agents parameters", "LOWER_BOUND_FLX_VALUATION"))
-parameter2_flx = float(config_object.get("Agents parameters", "UPPER_BOUND_FLX_VALUATION"))
+distribution_flx = config_object.get("Buy and sell apes parameters", "EXCEPTED_FLX_VALUATION_DISTRIBUTION")
+parameter1_flx = float(config_object.get("Buy and sell apes parameters", "LOWER_BOUND_FLX_VALUATION"))
+parameter2_flx = float(config_object.get("Buy and sell apes parameters", "UPPER_BOUND_FLX_VALUATION"))
 expected_flx_valuation_distribution = [distribution_flx, [parameter1_flx,parameter2_flx]]
+
+#Shorters specific parameters
+
+#Agents have ETH holdings uniformly distributed between 1 and 50 ETH
+distribution_eth = config_object.get("Short RAI long ETH agents parameters", "ETH_HOLDINGS_DISTRIBUTION")
+parameter1_eth = float(config_object.get("Short RAI long ETH agents parameters", "LOWER_BOUND_ETH_HOLDINGS"))
+parameter2_eth = float(config_object.get("Short RAI long ETH agents parameters", "UPPER_BOUND_ETH_HOLDINGS"))
+eth_holdings_distribution_shorters = [distribution_eth, [parameter1_eth, parameter2_eth]]
+
+distribution_difference = config_object.get("Short RAI long ETH agents parameters", "DIFFERENCE_THRESHOLD_DISTRIBUTION")
+parameter1_difference = float(config_object.get("Short RAI long ETH agents parameters", "DIFFERENCE_THRESHOLD_LOWER_BOUND"))
+parameter2_difference = float(config_object.get("Short RAI long ETH agents parameters", "DIFFERENCE_THRESHOLD_UPPER_BOUND"))
+difference_threshold_distribution = [distribution_difference, [parameter1_difference, parameter2_difference]]
+
+distribution_stop_loss = config_object.get("Short RAI long ETH agents parameters", "STOP_LOSS_DISTRIBUTION")
+parameter1_stop_loss = float(config_object.get("Short RAI long ETH agents parameters", "STOP_LOSS_LOWER_BOUND"))
+parameter2_stop_loss = float(config_object.get("Short RAI long ETH agents parameters", "STOP_LOSS_UPPER_BOUND"))
+stop_loss_distribution = [distribution_stop_loss, [parameter1_stop_loss, parameter2_stop_loss]]
+
+distribution_collateralization = config_object.get("Short RAI long ETH agents parameters", "COLLATERALIZATION_DISTRIBUTION")
+parameter1_collateralization = float(config_object.get("Short RAI long ETH agents parameters", "COLLATERALIZATION_LOWER_BOUND"))
+parameter2_collateralization = float(config_object.get("Short RAI long ETH agents parameters", "COLLATERALIZATION_UPPER_BOUND"))
+collateralization_distribution = [distribution_collateralization, [parameter1_collateralization, parameter2_collateralization]]
 
 #Choice of the parameters of the RAI system 
 
@@ -66,8 +98,22 @@ Pool = uniswap.UniswapPool(initial_rai, initial_eth)
 System = rai_system.RAISystem(controller, initial_redemption_price, ETH_USD_PRICE)
 
 #Initialize list of agents
-Agents = [agents.BuyAndSellApe(eth_holdings_distribution, apy_threshold_distribution, expected_flx_valuation_distribution) for i in range(N_AGENTS)]
 
+#The types of agents to use in the simulation
+agents_types_used = ["Buy and sell ape", "Shorter"]
+#The respective proportions of each of these agents
+agents_proportions = [BUY_AND_SELL_APES_PROPORTION, SHORTERS_PROPORTION]
+#Draw agents types at random from requested proportions
+agents_types_list = np.random.choice(agents_types_used, N_AGENTS, p=agents_proportions)
+
+#Actually initialize the agents
+Agents = []
+for agent_type in agents_types_list:
+    if agent_type == "Buy and sell ape":
+        Agents.append(agents.BuyAndSellApe(eth_holdings_distribution_apes, apy_threshold_distribution, expected_flx_valuation_distribution))
+    elif agent_type == "Shorter":
+        Agents.append(agents.LongETHShortRAI(eth_holdings_distribution_shorters, difference_threshold_distribution, stop_loss_distribution, collateralization_distribution))
+    
 #Lists to plot at the end
 twap_plot = []
 redemption_rate_hourly_plot = []
@@ -93,20 +139,36 @@ for i in range(N_HOURS):
     #Shuffle the agents: this makes the simulation non-deterministic 
     random.shuffle(Agents)
     for agent in Agents: 
-        #Each agent sees if they want to do something 
-        if agent.isAPYGood(Pool, System, FLX_PER_DAY_LIQUIDITY_PROVIDERS, ETH_USD_PRICE): 
-        #If the APY is good and the agent doesn't have liquidity tokens, buy and liquidity. If they already have LP tokens, do nothing.
-            if agent.wallet["lp tokens"] == 0:
-                agent.buyAndProvide(Pool)
-        #If the APY is not good, and the agent has liquidity tokens, remove liquidity and sell. If they don't have LP tokens, do nothing.
-        else: 
-            #print("Hey, I don't like this APY! \n")
-            spot_price = Pool.getSpotPrice()
-            if agent.wallet["lp tokens"] != 0:
-                agent.removeAndSell(Pool)
+        #Interaction flow for the apes
+        if agent.type == "BuyAndSellApe":
+            #Each agent sees if they want to do something 
+            if agent.isAPYGood(Pool, System, FLX_PER_DAY_LIQUIDITY_PROVIDERS, ETH_USD_PRICE): 
+            #If the APY is good and the agent doesn't have liquidity tokens, buy and liquidity. If they already have LP tokens, do nothing.
+                if agent.wallet["lp tokens"] == 0:
+                    agent.buyAndProvide(Pool)
+            #If the APY is not good, and the agent has liquidity tokens, remove liquidity and sell. If they don't have LP tokens, do nothing.
+            else: 
                 spot_price = Pool.getSpotPrice()
-                #DEBUG
-                x = 0
+                if agent.wallet["lp tokens"] != 0:
+                    agent.removeAndSell(Pool)
+                    spot_price = Pool.getSpotPrice()
+        #Interaction flow for the long ETH short RAI agents
+        elif agent.type == "LongETHShortRAI":
+            #If the agent has an active safe
+            if agent.active_safes_counter == 0:
+                #If the agent thinks the difference between market price and redemption price is high enough for them
+                if agent.isDifferenceAboveThreshold(System, Pool, ETH_USD_PRICE):
+                    #Mint RAI with half of the ETH in their wallet
+                    agent.mint(System, Pool, agent.wallet["eth"]/2, ETH_USD_PRICE)
+                    #Sell the RAI on the market
+                    agent.sellRAI(Pool)
+            #If the agent does not have any active safe
+            else:
+                if agent.isAbilityToRepayDebtCritical(System, Pool) or agent.isLossAboveStopLoss(System, Pool):
+                    #Close the position
+                    agent.buyAndRepay(System, Pool, ETH_USD_PRICE)
+                elif agent.isSpotPriceBelowTarget(Pool, ETH_USD_PRICE):
+                    agent.buyAndRepay(System, Pool, ETH_USD_PRICE)
 
     #Get the price after agents have done all of their hourly interactions
     spot_price_in_eth = Pool.getSpotPrice()
@@ -131,13 +193,13 @@ if not os.path.exists('results'):
     os.makedirs('results')
 filename = 'price-evol '+time_string+'.png'
 plt.savefig('results/'+filename)
-#plt.show()
 plt.close()
+# plt.show()
 
 plt.plot(days, redemption_rate_hourly_plot[0:len(redemption_price_hourly_plot)])
 plt.xlabel("Days elapsed")
 plt.ylabel("Hourly redemption rate in %")
 filename = 'redemption-rate-evol '+time_string+'.png'
 plt.savefig('results/'+filename)
-#plt.show()
 plt.close()
+# plt.show()

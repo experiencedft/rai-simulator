@@ -76,6 +76,8 @@ class BuyAndSellApe():
             upper_bound = expected_flx_valuation_distribution[1][1]
             self.expected_flx_valuation = uniform(lower_bound, upper_bound)
 
+        self.type = "BuyAndSellApe"
+
     def isAPYGood(self, Pool, System, flx_given_per_day, eth_usd_price):
         '''
         Given the current Uniswap RAI/ETH pool state, check that the APY is satisfactory for the ape, without affecting the state of the pool. If the ape already has LP tokens, the calculation is direct. Otherwise, the ape calculates what their APY would be if they provided liquidity with their entire net worth. ONLY WORKS IF ETH RESERVES IN THE POOL ARE < 2. Note: can be modified later to use part of their net worth instead of its entirety.
@@ -324,6 +326,7 @@ class LongETHShortRAI():
         self.active_safes_counter = 0
         self.net_worth_before_shorting = self.wallet["eth"]
         self.current_short_price_target = 0
+        self.type = "LongETHShortRAI"
 
     def updateWallet(self, net_amount_rai_in, net_amount_eth_in):
         '''
