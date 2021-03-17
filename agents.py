@@ -455,7 +455,6 @@ class LongETHShortRAI():
         debt = active_safe["debt"]
         #Amount of ETH needed to buy the necessary amount of RAI 
         eth_needed = Pool.ETHInGivenRAIOut(debt)
-        rai_obtained = Pool.buyRAI(eth_needed)
         #Subtract used ETH from wallet
         self.wallet["eth"] -= eth_needed
         #Close the safe
