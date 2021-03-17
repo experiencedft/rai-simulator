@@ -83,15 +83,10 @@ collateralization_distribution = [distribution_collateralization, [parameter1_co
 #Choice of the parameters of the RAI system 
 
 #Choice of a controller and its parameters, in this case proportional with Kp = 0.01
-controller_type = config_object.get("RAI system parameters", "CONTROLLER")
-if controller_type == "P": 
-    Kp = float(config_object.get("RAI system parameters", "KP"))
-    controller_parameters = [Kp]
-elif controller_type == "PI":
-    Kp = float(config_object.get("RAI system parameters", "KP"))
-    Ki = float(config_object.get("RAI system parameters", "KI"))
-    controller_parameters = [Kp, Ki]
-controller = [controller_type, controller_parameters]
+Kp = float(config_object.get("RAI system parameters", "KP"))
+Ki = float(config_object.get("RAI system parameters", "KI"))
+Kd = float(config_object.get("RAI system parameters", "KD"))
+controller_params = [Kp, Ki, Kd]
 
 #Initial redemption price of RAI in USD
 initial_redemption_price = 3.14
@@ -100,7 +95,7 @@ initial_redemption_price = 3.14
 Pool = uniswap.UniswapPool(initial_rai, initial_eth)
 
 #Initialize RAI system
-System = rai_system.RAISystem(controller, initial_redemption_price, ETH_USD_PRICE)
+System = rai_system.RAISystem(controller_params, initial_redemption_price, ETH_USD_PRICE)
 
 #Initialize list of agents
 
@@ -180,8 +175,9 @@ for i in range(N_HOURS):
     #Get the price after agents have done all of their hourly interactions
     spot_price_in_eth = Pool.getSpotPrice()
     spot_price_in_usd = spot_price_in_eth*ETH_USD_PRICE
-    #Update the redemption rate based on the TWAP at the end of this 1-hour period
-    System.updateRedemptionRateHourly(twap_in_eth, ETH_USD_PRICE) 
+    #Update the redemption rate based on the TWAP at the end of this 1-hour period - only after the second hour to let the derivative part of the controller act
+    if i > 2:
+        System.updateRedemptionRateHourly(twap_in_eth, ETH_USD_PRICE) 
     #Add the spot price IN ETH to the list containing the 16 previous end of hour spot prices
     Pool.addHourlyPrice(spot_price_in_eth)
     if i % 1740 == 0:

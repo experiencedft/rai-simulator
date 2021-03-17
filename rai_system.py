@@ -44,7 +44,7 @@ class RAISystem():
         update the max RAI that one can get from a unit of ETH collateral given the new ETHUSD price
     '''
 
-    def __init__(self, controller, initial_redemption_price, current_eth_usd_price):
+    def __init__(self, controller_params, initial_redemption_price, current_eth_usd_price):
         '''
         Initialization of the RAI system with a given type of controller and an initial redemption price.
 
@@ -58,17 +58,8 @@ class RAISystem():
             the current ETHUSD price to determine the initial maximum amount of RAI per ETH that can be obtained 
 
         '''
-        
-        assert controller[0] == "P" or controller[0] == "PI" or controller[0] == "PID"
 
-        if controller[0] == "P":
-            assert len(controller[1]) == 1
-        if controller[0] == "PI":
-            assert len(controller[1]) == 2
-        if controller[0] == "PID":
-            assert len(controller[1]) == 3
-
-        self.controller = controller
+        self.controller_params = controller_params
         self.redemption_price = initial_redemption_price
         self.redemption_rate_hourly = 0
         self.total_collateral = 0
@@ -96,15 +87,12 @@ class RAISystem():
         None
         '''
 
-        #Action of a proportional controller (P)
-        if self.controller[0] == "P":
-            Kp = self.controller[1][0]
-            self.redemption_rate_hourly = Kp*(self.redemption_price - twap*eth_usd_price)
-        #Action of a proportional-integral controller (PI)
-        elif self.controller[0] == "PI":
-            Kp = self.controller[1][0]
-            Ki = self.controller[1][1]
-            self.redemption_rate_hourly = Kp*(self.redemption_price - twap*eth_usd_price) + Ki*sum(self.errors)
+        Kp = self.controller_params[0]
+        Ki = self.controller_params[1]
+        Kd = self.controller_params[2]
+        current_error = self.errors[-1]
+        previous_error = self.errors[-2]
+        self.redemption_rate_hourly = Kp*current_error + Ki*sum(self.errors) + Kd*(current_error - previous_error)
 
     def updateRedemptionPriceHourly(self):
         '''
