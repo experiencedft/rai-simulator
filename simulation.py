@@ -89,7 +89,7 @@ Kd = float(config_object.get("RAI system parameters", "KD"))
 controller_params = [Kp, Ki, Kd]
 
 #Initial redemption price of RAI in USD
-initial_redemption_price = 3.14
+initial_redemption_price = ETH_USD_PRICE*(initial_eth/initial_rai)
 
 #Initialize Uniswap pool with some arbitrary amount of liquidity
 Pool = uniswap.UniswapPool(initial_rai, initial_eth)
@@ -112,7 +112,7 @@ for agent_type in agents_types_list:
     if agent_type == "Buy and sell ape":
         Agents.append(agents.BuyAndSellApe(eth_holdings_distribution_apes, apy_threshold_distribution, expected_flx_valuation_distribution))
     elif agent_type == "Shorter":
-        Agents.append(agents.LongETHShortRAI(eth_holdings_distribution_shorters, difference_threshold_distribution, stop_loss_distribution, collateralization_distribution))
+        Agents.append(agents.ShortRAI(eth_holdings_distribution_shorters, difference_threshold_distribution, stop_loss_distribution, collateralization_distribution))
     
 #Lists to plot at the end
 twap_plot = []
@@ -155,7 +155,7 @@ for i in range(N_HOURS):
                     agent.removeAndSell(Pool)
                     spot_price = Pool.getSpotPrice()
         #Interaction flow for the long ETH short RAI agents
-        elif agent.type == "LongETHShortRAI":
+        elif agent.type == "ShortRAI":
             #If the agent has an active safe
             if agent.active_safes_counter == 0:
                 #If the agent thinks the difference between market price and redemption price is high enough for them
@@ -169,7 +169,7 @@ for i in range(N_HOURS):
                 if agent.isAbilityToRepayDebtCritical(System, Pool) or agent.isLossAboveStopLoss(System, Pool):
                     #Close the position
                     agent.buyAndRepay(System, Pool, ETH_USD_PRICE)
-                elif agent.isSpotPriceBelowTarget(Pool, ETH_USD_PRICE):
+                elif agent.isSpotPriceBelowTarget(Pool, ETH_USD_PRICE) and all(rate > 0 for rate in redemption_rate_hourly_plot[-96:]):
                     agent.buyAndRepay(System, Pool, ETH_USD_PRICE)
 
     #Get the price after agents have done all of their hourly interactions

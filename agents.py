@@ -251,7 +251,7 @@ class BuyAndSellApe():
         self.wallet["eth"] += amount_eth
         self.wallet["lp tokens"] = 0 
 
-class LongETHShortRAI():
+class ShortRAI():
     '''
     A class to represent shorters who mint RAI to sell it on the market for ETH when the market price is above the redemption price with a certain delta threshold. These agents make sure that the value of their debt remains below what they could buy on the market at any given point in time to be able to close their safes. When the *effective* market price drops some percentage below their initial mint price, they buy back on the market and close their safes for an ETH profit. Can only have one short opened at a time for now. The price target for now is the redemption price when the short is opened.
 
@@ -326,7 +326,7 @@ class LongETHShortRAI():
         self.active_safes_counter = 0
         self.net_worth_before_shorting = self.wallet["eth"]
         self.current_short_price_target = 0
-        self.type = "LongETHShortRAI"
+        self.type = "ShortRAI"
 
     def updateWallet(self, net_amount_rai_in, net_amount_eth_in):
         '''
