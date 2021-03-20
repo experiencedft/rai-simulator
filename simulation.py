@@ -156,7 +156,7 @@ for i in range(N_HOURS):
                     spot_price = Pool.getSpotPrice()
         #Interaction flow for the long ETH short RAI agents
         elif agent.type == "ShortRAI":
-            #If the agent has an active safe
+            #If the agent does not have an active safe
             if agent.active_safes_counter == 0:
                 #If the agent thinks the difference between market price and redemption price is high enough for them
                 if agent.isDifferenceAboveThreshold(System, Pool, ETH_USD_PRICE):
@@ -164,9 +164,9 @@ for i in range(N_HOURS):
                     agent.mint(System, Pool, agent.wallet["eth"]/2, ETH_USD_PRICE)
                     #Sell the RAI on the market
                     agent.sellRAI(Pool)
-            #If the agent does not have any active safe
+            #If the agent has an active safe
             else:
-                if agent.isAbilityToRepayDebtCritical(System, Pool) or agent.isLossAboveStopLoss(System, Pool):
+                if agent.isLossAboveStopLoss(System, Pool):
                     #Close the position
                     agent.buyAndRepay(System, Pool, ETH_USD_PRICE)
                 elif agent.isSpotPriceBelowTarget(Pool, ETH_USD_PRICE) and all(rate > 0 for rate in redemption_rate_hourly_plot[-96:]):
