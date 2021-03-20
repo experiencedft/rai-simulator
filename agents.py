@@ -288,8 +288,6 @@ class ShortRAI():
         mint some amount of RAI by using the specified amount of ETH as collateral. 
     isDifferenceAboveThreshold(System, Pool):
         check whether the difference between  the redemption price of the system and the current market price is above the desired threshold = if opening a short is a good idea for that agent now 
-    isAbilityToRepayDebtCritical(System, Pool):
-        verify that the agent has enough ETH in their wallet to be able to repay the debt at any given point in time, with 10% margin
     isLossAboveStopLoss(System, Pool):
         verify whether the current unrealized loss of the short is above the stop loss of the user
     isSpotPriceBelowTarget(Pool):
@@ -492,43 +490,6 @@ class ShortRAI():
         eth_obtained = Pool.sellRAI(self.wallet["rai"])
         self.wallet["eth"] += eth_obtained
         self.wallet["rai"] = 0
-
-    def isAbilityToRepayDebtCritical(self, System, Pool):
-        '''
-        Verify that the agent has enough ETH in their wallet to be able to repay the debt at any given point in time. If the amount of ETH needed becomes critical, such that there would only be a small amount of ETH left in the wallet after repaying, the debt is repaid to avoid not being able to repay next at a future step. That critical amount is defined as 1.1x the amount of ETH needed to repay the debt in order to reasonably avoid sudden price shocks (unlikely in 1-hour based simulations). If the amount of ETH in the wallet is too low for some reason, the agent cannot interact with the safe in anymore, and so it becomes inactive.
-
-        Parameters: 
-
-        System: RAISystem() class
-            the current RAI system
-        
-        Pool: UniswapPool() class
-            the current Uniswap market
-
-        State change: 
-        
-        self.active_safes_counter: 
-            if there is no enough ETH to close the currently active safe anymore, consider it inactive
-
-        Returns: 
-
-        True if there is more than barely enough ETH in the wallet to repay the debt of the active vault.
-
-        False if the amount of ETH needed is within the danger zone
-        '''
-        #We assume only one active vault, the latest
-        safe_id = self.safes_owned[-1]
-        #Get the content of the safe from the system
-        safe = System.getSafe(safe_id)
-        current_debt_in_rai = safe["debt"]
-        #Amount of ETH needed to repay the debt at current Uniswap pool market price
-        eth_needed = Pool.ETHInGivenRAIOut(current_debt_in_rai)
-        if self.wallet["eth"] > 1.1*eth_needed: 
-            return False
-        elif eth_needed < self.wallet["eth"] < 1.1*eth_needed: 
-            return True
-        else: 
-            self.active_safes_counter -= 1
             
     def isLossAboveStopLoss(self, System, Pool): 
         '''
