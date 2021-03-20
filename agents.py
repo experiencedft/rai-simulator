@@ -253,7 +253,9 @@ class BuyAndSellApe():
 
 class ShortRAI():
     '''
-    A class to represent shorters who mint RAI to sell it on the market for ETH when the market price is above the redemption price with a certain delta threshold. These agents make sure that the value of their debt remains below what they could buy on the market at any given point in time to be able to close their safes. When the *effective* market price drops some percentage below their initial mint price, they buy back on the market and close their safes for an ETH profit. Can only have one short opened at a time for now. The price target for now is the redemption price when the short is opened.
+    A class to represent shorters who mint RAI to sell it on the market for ETH when the market price is above the redemption price with a certain delta threshold. These agents make sure that the value of their debt remains below what they could buy on the market at any given point in time to be able to close their safes. When the *effective* market price drops some percentage below their initial mint price, they buy back on the market and close their safes for an ETH profit. Can only have one short opened at a time for now. The price target for now is the redemption price when the short is opened. 
+
+    TODO: Make targets to close the short more varied. Agents might cloes their shorts only when the price market price starts going up again, or might do before their target is reached if they're ok with the current unrealized profit, etc.
 
     Attributes 
     ___________
@@ -287,7 +289,7 @@ class ShortRAI():
     isDifferenceAboveThreshold(System, Pool):
         check whether the difference between  the redemption price of the system and the current market price is above the desired threshold = if opening a short is a good idea for that agent now 
     isAbilityToRepayDebtCritical(System, Pool):
-        verify that the agent has enough ETH in their wallet to be able to repay the debt at any given point in time, with 0.1% margin
+        verify that the agent has enough ETH in their wallet to be able to repay the debt at any given point in time, with 10% margin
     isLossAboveStopLoss(System, Pool):
         verify whether the current unrealized loss of the short is above the stop loss of the user
     isSpotPriceBelowTarget(Pool):
@@ -455,6 +457,10 @@ class ShortRAI():
         debt = active_safe["debt"]
         #Amount of ETH needed to buy the necessary amount of RAI 
         eth_needed = Pool.ETHInGivenRAIOut(debt)
+        #If the amount of ETH in the wallet is not enough, add the difference! This may represent for example a new fiat -> crypto buy.
+        #Note that this does not add anything to the agent's net worth as that difference is only used to repay the debt
+        if eth_needed > self.wallet["eth"]:
+            self.wallet["eth"] += eth_needed - self.wallet["eth"]
         #Subtract used ETH from wallet
         self.wallet["eth"] -= eth_needed
         #Close the safe
