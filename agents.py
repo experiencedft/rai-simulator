@@ -802,7 +802,7 @@ class LongETH():
 
     def isUptrendGoodToLong(self, eth_price_array_hourly):
         '''
-        Check whether the agent finds the current price trend good to long. Currently a number of days in a row of positive price action.
+        Check whether the agent finds the current price trend good to long. Currently a number of weeks in a row of positive price action.
 
         Return True if it is.
 
@@ -810,7 +810,7 @@ class LongETH():
         '''
 
         for i in range(self.uptrend_to_open_long, 0, -1):
-            if (eth_price_array_hourly[-24*(i+1)] < eth_price_array_hourly[-24*i]) == False:
+            if (eth_price_array_hourly[-168*(i+1)] < eth_price_array_hourly[-168*i]) == False:
                 return False
         return True
 
@@ -824,7 +824,7 @@ class LongETH():
         '''
 
         for i in range(self.downtrend_to_close_long, 0, -1):
-            if (eth_price_array_hourly[-24*(i+1)] > eth_price_array_hourly[-24*i]) == False:
+            if (eth_price_array_hourly[-168*(i+1)] > eth_price_array_hourly[-168*i]) == False:
                 return False
         return True
     
