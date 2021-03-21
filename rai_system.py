@@ -229,7 +229,7 @@ class RAISystem():
         #Check that the debt is above the minimum collateralization threshold
         new_collateralization =  self.safes[safe_id]["collateral"]*eth_usd_price/(self.safes[safe_id]["debt"]*self.redemption_price)
 
-        assert new_collateralization > MIN_COLLATERALIZATION
+        assert 100*new_collateralization > MIN_COLLATERALIZATION
 
     def getSafe(self, safe_id):
         '''
