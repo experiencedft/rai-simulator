@@ -43,3 +43,7 @@ Note: as of writing this, using LongETH agents makes the system diverge really q
 ## Contributing
 
 This project is open to any contribution. Please open an issue if you have anything in mind so that development can be easily coordinated. The priority in my opinion is to look for bugs and add more agents with different strategies.
+
+## Acknowledgements
+
+Thanks to Ameen Soleimani for the idea of an agents based model.
