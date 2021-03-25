@@ -406,8 +406,6 @@ class ShortRAI():
 
         None
         '''
-        #We let the user mint with only half of their ETH wallet content as they need to be able to repay the debt for a while to avoid instant repay after minting. This is ok if we assume that half of their wallet is not enough to move the price by more than a ~20-50% order of magnitude (not calculated exactly), otherwise, slippage makes the effective price so high that they can't repay with what remains in their wallet right after minting.
-        assert amount_collateral <= self.wallet["eth"]/2
         #Check that the user doesn't already have an active safe
         if self.active_safes_counter < 1: 
             safe_id, rai_to_mint = System.openSafe(amount_collateral, self.desired_collateralization, eth_usd_price)
@@ -737,15 +735,16 @@ class LongETH():
         True if the current unrealized loss is above threshold, False otherwise.
         '''
         #Current effective value of the debt in ETH (amount needed to repay the debt)
-        active_safe = System.getSafe(self.safes_owned[-1])
-        amount_eth_needed = Pool.ETHInGivenRAIOut(active_safe["debt"])
-        current_net_worth = self.wallet["eth"] + active_safe["collateral"] - amount_eth_needed
-        #Current unrealized loss
-        unrealized_loss = 100*(1- current_net_worth/self.net_worth_before_longing)
-        if unrealized_loss > self.stop_loss:
-            return True
-        else: 
-            return False
+        if self.active_safes_counter > 0:
+            active_safe = System.getSafe(self.safes_owned[-1])
+            amount_eth_needed = Pool.ETHInGivenRAIOut(active_safe["debt"])
+            current_net_worth = self.wallet["eth"] + active_safe["collateral"] - amount_eth_needed
+            #Current unrealized loss
+            unrealized_loss = 100*(1- current_net_worth/self.net_worth_before_longing)
+            if unrealized_loss > self.stop_loss:
+                return True
+            else: 
+                return False
 
     def buyAndRepay(self, System, Pool, eth_usd_price):
         '''
@@ -836,12 +835,12 @@ class LongETH():
 
         Return False otherwise.
         '''
-
-        safe = System.getSafe(self.safes_owned[-1])
-        collateral_in_eth = safe["collateral"]
-        debt_in_rai = safe["debt"]
-        debt_in_eth = debt_in_rai*(System.redemption_price/eth_usd_price)
-        collateralization_percent = 100*(collateral_in_eth/debt_in_eth)
-        if collateralization_percent < 150:
-            return True
-        return False
+        if self.active_safes_counter > 0:
+            safe = System.getSafe(self.safes_owned[-1])
+            collateral_in_eth = safe["collateral"]
+            debt_in_rai = safe["debt"]
+            debt_in_eth = debt_in_rai*(System.redemption_price/eth_usd_price)
+            collateralization_percent = 100*(collateral_in_eth/debt_in_eth)
+            if collateralization_percent < 150:
+                return True
+            return False
