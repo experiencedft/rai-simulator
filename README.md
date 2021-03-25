@@ -4,7 +4,7 @@
 
 This project is a MVP for an agent-based model of RAI's market behavior. The RAI system, the Uniswap pool and the agents are represented as classes. The agents each have their own strategies and make decisions on whether they should buy, sell, provide liquidity, mint etc based on said strategy in discrete timesteps.
 
-Currently the project only implements one type of agents and is intended to be used for simulations with 1-hour timesteps.
+Currently the project is intended to be used for simulations with 1-hour timesteps.
 
 The code is structured as follows: the ``agents`` module contains the classes defining the different kinds of agents who will interact with the different protocols in the ``protocols`` module (the RAI system itself, the Uniswap pool, later some auxiliary lending markets perhaps). The ``utils`` module is intended to contain miscellaneous utility functions as the project requires it.
 
