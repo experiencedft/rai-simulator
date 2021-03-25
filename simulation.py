@@ -121,6 +121,8 @@ Ki = float(config_object.get("RAI system parameters", "KI"))
 Kd = float(config_object.get("RAI system parameters", "KD"))
 controller_params = [Kp, Ki, Kd]
 
+UPDATE_PERIOD = float(config_object.get("RAI system parameters", "UPDATE_PERIOD"))
+
 #Initial redemption price of RAI in USD
 initial_redemption_price = INITIAL_ETH_USD_PRICE*(initial_eth/initial_rai)
 
@@ -230,7 +232,8 @@ for i in range(N_HOURS):
     spot_price_in_usd = spot_price_in_eth*ETH_USD_PRICE[i]
     #Update the redemption rate based on the TWAP at the end of this 1-hour period - only after the second hour to let the derivative part of the controller act
     if i > 2:
-        System.updateRedemptionRateHourly(twap_in_eth, ETH_USD_PRICE[i]) 
+        if i % UPDATE_PERIOD == 0:
+            System.updateRedemptionRateHourly(twap_in_eth, ETH_USD_PRICE[i]) 
     #Add the spot price IN ETH to the list containing the 16 previous end of hour spot prices
     Pool.addHourlyPrice(spot_price_in_eth)
     if i % 1740 == 0:
