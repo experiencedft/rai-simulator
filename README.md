@@ -4,6 +4,8 @@
 
 This project is a MVP for an agent-based model of RAI's market behavior. The RAI system, the Uniswap pool and the agents are represented as classes. The agents each have their own strategies and make decisions on whether they should buy, sell, provide liquidity, mint etc based on said strategy in discrete timesteps.
 
+The simulation tool does not exactly represent the way RAI system is deployed on mainnet, and is missing some aspects of the feedback mechanism described in the [Reflexer whitepaper](https://github.com/reflexer-labs/whitepapers/blob/master/English/rai-english.pdf). As such, none of the outputs of the simulations should be treated as conclusive evidence of the way the system would behave in the real world, but are rather intended to help build intuition.
+
 Currently the project is intended to be used for simulations with 1-hour timesteps.
 
 The code is structured as follows: the ``agents`` module contains the classes defining the different kinds of agents who will interact with the different protocols in the ``protocols`` module (the RAI system itself, the Uniswap pool, later some auxiliary lending markets perhaps). The ``utils`` module is intended to contain miscellaneous utility functions as the project requires it.
