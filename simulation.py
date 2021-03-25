@@ -1,10 +1,13 @@
 from configparser import ConfigParser
 
-import rai_system
-import agents
-import uniswap
-
 from utils import pricegeneration as pr
+
+from agents.BuyAndSellApe import BuyAndSellApe
+from agents.LongETH import LongETH
+from agents.ShortRAI import ShortRAI
+
+from protocols.rai_system import RAISystem
+from protocols.uniswap import UniswapPool
 
 import random 
 import time
@@ -122,10 +125,10 @@ controller_params = [Kp, Ki, Kd]
 initial_redemption_price = INITIAL_ETH_USD_PRICE*(initial_eth/initial_rai)
 
 #Initialize Uniswap pool with some arbitrary amount of liquidity
-Pool = uniswap.UniswapPool(initial_rai, initial_eth)
+Pool = UniswapPool(initial_rai, initial_eth)
 
 #Initialize RAI system
-System = rai_system.RAISystem(controller_params, initial_redemption_price, INITIAL_ETH_USD_PRICE)
+System = RAISystem(controller_params, initial_redemption_price, INITIAL_ETH_USD_PRICE)
 
 #Initialize list of agents
 
@@ -140,11 +143,11 @@ agents_types_list = np.random.choice(agents_types_used, N_AGENTS, p=agents_propo
 Agents = []
 for agent_type in agents_types_list:
     if agent_type == "Buy and sell ape":
-        Agents.append(agents.BuyAndSellApe(eth_holdings_distribution_apes, apy_threshold_distribution, expected_flx_valuation_distribution))
+        Agents.append(BuyAndSellApe(eth_holdings_distribution_apes, apy_threshold_distribution, expected_flx_valuation_distribution))
     elif agent_type == "Shorter":
-        Agents.append(agents.ShortRAI(eth_holdings_distribution_shorters, difference_threshold_distribution, stop_loss_distribution_shorts, collateralization_distribution))
+        Agents.append(ShortRAI(eth_holdings_distribution_shorters, difference_threshold_distribution, stop_loss_distribution_shorts, collateralization_distribution))
     elif agent_type == "LongETH":
-        Agents.append(agents.LongETH(eth_holdings_distribution_longs, uptrend_distribution, downtrend_distribution, stop_loss_distribution_longs))
+        Agents.append(LongETH(eth_holdings_distribution_longs, uptrend_distribution, downtrend_distribution, stop_loss_distribution_longs))
     
 #Lists to plot at the end
 twap_plot = []
@@ -245,14 +248,14 @@ plt.ylabel("USD")
 if not os.path.exists('results'):
     os.makedirs('results')
 filename = 'price-evol '+time_string+'.png'
-# plt.savefig('results/'+filename)
-# plt.close()
-plt.show()
+plt.savefig('results/'+filename)
+plt.close()
+# plt.show()
 
 plt.plot(days, redemption_rate_hourly_plot[0:len(redemption_price_hourly_plot)])
 plt.xlabel("Days elapsed")
 plt.ylabel("Hourly redemption rate in %")
 filename = 'redemption-rate-evol '+time_string+'.png'
-# plt.savefig('results/'+filename)
-# plt.close()
+plt.savefig('results/'+filename)
+plt.close()
 # plt.show()
