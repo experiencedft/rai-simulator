@@ -29,9 +29,13 @@ N_AGENTS = int(config_object.get("Global parameters", "N_AGENTS"))
 N_DAYS = int(config_object.get("Global parameters", "N_DAYS"))
 N_HOURS = N_DAYS*24
 
-INITIAL_ETH_USD_PRICE = float(config_object.get("Global parameters", "ETH_USD_PRICE"))
+INITIAL_ETH_USD_PRICE = float(config_object.get("Global parameters", "INITIAL_ETH_USD_PRICE"))
+FINAL_ETH_USD_PRICE = float(config_object.get("Global parameters", "FINAL_ETH_USD_PRICE"))
+UPPER_BOUND_ETH_USD_PRICE = float(config_object.get("Global parameters", "UPPER_BOUND_ETH_USD_PRICE"))
+LOWER_BOUND_ETH_USD_PRICE = float(config_object.get("Global parameters", "LOWER_BOUND_ETH_USD_PRICE"))
+RANDOM_WALK_STD = float(config_object.get("Global parameters", "RANDOM_WALK_STD"))
 #Array of ETH 1H price action over N_HOURS as a random walk
-ETH_USD_PRICE = pr.boundedRandomWalk(N_HOURS, 1500, 3000, 1500, 2000, 5)
+ETH_USD_PRICE = pr.boundedRandomWalk(N_HOURS, LOWER_BOUND_ETH_USD_PRICE, UPPER_BOUND_ETH_USD_PRICE, INITIAL_ETH_USD_PRICE, FINAL_ETH_USD_PRICE, RANDOM_WALK_STD)
 
 FLX_PER_DAY_LIQUIDITY_PROVIDERS = float(config_object.get("Global parameters", "FLX_PER_DAY_LIQUIDITY_PROVIDERS"))
 
